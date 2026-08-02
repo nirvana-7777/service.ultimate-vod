@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<settings>
+    <category label="Crawler Connection">
+        <setting id="crawler_url" type="text" label="Crawler API URL" default="http://localhost:7888"/>
+        <setting id="crawler_enabled" type="bool" label="Enable Library Sync" default="false"/>
+    </category>
+    
+    <category label="Sync Settings">
+        <setting id="auto_sync" type="bool" label="Auto-sync on Kodi startup" default="true"/>
+        <setting id="sync_interval" type="number" label="Sync interval (seconds)" default="3600"/>
+        <setting id="library_path" type="text" label="Library Cache Path" 
+                 default="special://profile/addon_data/service.ultimate-vod/cache"/>
+    </category>
+    
+    <category label="Advanced">
+        <setting id="last_sync_time" type="text" label="Last Sync Time" default="" visible="false"/>
+    </category>
+</settings>

@@ -1,0 +1,62 @@
+# Kodi language file
+# Addon Name: Ultimate VOD Service
+# Addon id: service.ultimate-vod
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Ultimate VOD Service\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Settings
+msgctxt "#30000"
+msgid "Crawler API URL"
+msgstr "Crawler API URL"
+
+msgctxt "#30001"
+msgid "Enable Library Sync"
+msgstr "Enable Library Sync"
+
+msgctxt "#30002"
+msgid "Auto-sync on Kodi startup"
+msgstr "Auto-sync on Kodi startup"
+
+msgctxt "#30003"
+msgid "Sync interval (seconds)"
+msgstr "Sync interval (seconds)"
+
+msgctxt "#30004"
+msgid "Library Cache Path"
+msgstr "Library Cache Path"
+
+msgctxt "#30005"
+msgid "Last Sync Time"
+msgstr "Last Sync Time"
+
+msgctxt "#30006"
+msgid "Advanced"
+msgstr "Advanced"
+
+msgctxt "#30007"
+msgid "Crawler Connection"
+msgstr "Crawler Connection"
+
+msgctxt "#30008"
+msgid "Sync Settings"
+msgstr "Sync Settings"
+
+# Notifications
+msgctxt "#30100"
+msgid "Sync complete: {0} added"
+msgstr "Sync complete: {0} added"
+
+msgctxt "#30101"
+msgid "Sync failed: {0}"
+msgstr "Sync failed: {0}"
