@@ -15,7 +15,8 @@ class UltimateMonitor(xbmc.Monitor):
         self.addon = xbmcaddon.Addon()
         self.is_aborted = False
 
-    def onSettingsChanged(self):
+    @staticmethod
+    def onSettingsChanged():
         """Called when addon settings change"""
         xbmc.log("[Ultimate VOD Service] Settings changed", xbmc.LOGDEBUG)
         # The service will check settings on the next loop iteration
