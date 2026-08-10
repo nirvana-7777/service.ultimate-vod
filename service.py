@@ -210,36 +210,66 @@ def main():
     """Entry point - handles both service and manual sync modes"""
 
     # Check if we were called with arguments (e.g., from RunScript)
-    if len(sys.argv) > 1 and sys.argv[1] == 'sync':
-        xbmc.log(f"{LOG_PREFIX} Manual sync triggered via script", xbmc.LOGINFO)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'sync':
+            xbmc.log(f"{LOG_PREFIX} Manual sync triggered via script", xbmc.LOGINFO)
 
-        try:
-            manager = LibraryManager()
-        except Exception as e:
-            xbmc.log(f"{LOG_PREFIX} Failed to create LibraryManager for manual sync: {e}",
-                      xbmc.LOGERROR)
-            xbmcgui.Dialog().notification(
-                "Ultimate VOD", "Sync failed: could not initialize", xbmcgui.NOTIFICATION_ERROR, 4000
-            )
-            return
+            try:
+                manager = LibraryManager()
+            except Exception as e:
+                xbmc.log(f"{LOG_PREFIX} Failed to create LibraryManager for manual sync: {e}",
+                         xbmc.LOGERROR)
+                xbmcgui.Dialog().notification(
+                    "Ultimate VOD", "Sync failed: could not initialize", xbmcgui.NOTIFICATION_ERROR, 4000
+                )
+                return
 
-        success, message, stats = manager.sync(show_progress=True)
+            success, message, stats = manager.sync(show_progress=True)
 
-        if success:
-            xbmcgui.Dialog().notification(
-                "Ultimate VOD",
-                f"Sync complete: {stats.get('added', 0)} added",
-                xbmcgui.NOTIFICATION_INFO,
-                4000
-            )
-        else:
-            xbmcgui.Dialog().notification(
-                "Ultimate VOD",
-                f"Sync failed: {message}",
-                xbmcgui.NOTIFICATION_ERROR,
-                4000
-            )
-        return  # Exit immediately, do not start the loop!
+            if success:
+                xbmcgui.Dialog().notification(
+                    "Ultimate VOD",
+                    f"Sync complete: {stats.get('added', 0)} added",
+                    xbmcgui.NOTIFICATION_INFO,
+                    4000
+                )
+            else:
+                xbmcgui.Dialog().notification(
+                    "Ultimate VOD",
+                    f"Sync failed: {message}",
+                    xbmcgui.NOTIFICATION_ERROR,
+                    4000
+                )
+            return  # Exit immediately, do not start the loop!
+
+        elif sys.argv[1] == 'addsource':
+            xbmc.log(f"{LOG_PREFIX} Add source triggered via script", xbmc.LOGINFO)
+            try:
+                manager = LibraryManager()
+                success = manager.add_source_to_library()
+
+                if success:
+                    xbmcgui.Dialog().ok(
+                        "Ultimate VOD",
+                        "Library source added successfully!\n\n"
+                        "You can now find 'Ultimate VOD' in your Kodi Video sources. "
+                        "You do not need to run this again."
+                    )
+                    # Optional: Automatically trigger a library scan right after adding
+                    xbmc.executebuiltin("UpdateLibrary(video)")
+                else:
+                    xbmcgui.Dialog().ok(
+                        "Ultimate VOD",
+                        "Failed to add source automatically. Please add it manually:\n\n"
+                        "1. Go to Videos > Files > Add Videos...\n"
+                        "2. Browse to your Ultimate VOD cache folder."
+                    )
+            except Exception as e:
+                xbmc.log(f"{LOG_PREFIX} Failed to add source: {e}", xbmc.LOGERROR)
+                xbmcgui.Dialog().notification(
+                    "Ultimate VOD", "Failed to add source", xbmcgui.NOTIFICATION_ERROR, 4000
+                )
+            return  # Exit immediately, do not start the loop!
 
     # Normal startup - start the service. A failure here is caught and
     # logged rather than left to crash the interpreter, since an unhandled

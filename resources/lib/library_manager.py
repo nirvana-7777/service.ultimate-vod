@@ -419,6 +419,68 @@ class LibraryManager:
         """Tell Kodi to scan the library"""
         xbmc.executebuiltin("UpdateLibrary(video)")
 
+    def _is_source_added(self) -> bool:
+        """Check if the cache directory is already a Kodi video source"""
+        import json
+        result = xbmc.executeJSONRPC(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "Files.GetSources",
+            "params": {"media": "video"},
+            "id": 1
+        }))
+        try:
+            data = json.loads(result)
+            sources = data.get('result', {}).get('sources', [])
+            # Normalize our cache path for comparison
+            cache_path = xbmcvfs.translatePath(str(self.cache_dir))
+
+            for source in sources:
+                # Normalize the source path from Kodi
+                source_path = xbmcvfs.translatePath(source.get('file', ''))
+                if source_path == cache_path:
+                    return True
+        except Exception as e:
+            xbmc.log(f"{LOG_PREFIX} Error checking sources: {e}", xbmc.LOGWARNING)
+        return False
+
+    def add_source_to_library(self) -> bool:
+        """Automatically add the cache folder to Kodi's video sources"""
+        if self._is_source_added():
+            xbmc.log(f"{LOG_PREFIX} Source already exists, skipping", xbmc.LOGINFO)
+            return True
+
+        import json
+
+        # JSON-RPC requires directory paths to end with a slash
+        cache_path = str(self.cache_dir)
+        if not cache_path.endswith('/') and not cache_path.endswith('\\'):
+            cache_path += '/'
+
+        params = {
+            "source": {
+                "name": "Ultimate VOD",
+                "path": cache_path
+            }
+        }
+
+        result = xbmc.executeJSONRPC(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "Files.AddSource",
+            "params": params,
+            "id": 1
+        }))
+
+        try:
+            data = json.loads(result)
+            if 'error' in data:
+                xbmc.log(f"{LOG_PREFIX} Failed to add source: {data['error']}", xbmc.LOGERROR)
+                return False
+            xbmc.log(f"{LOG_PREFIX} Source added successfully", xbmc.LOGINFO)
+            return True
+        except Exception as e:
+            xbmc.log(f"{LOG_PREFIX} Exception adding source: {e}", xbmc.LOGERROR)
+            return False
+
     def clear_cache(self) -> None:
         """Clear the entire library cache"""
         try:

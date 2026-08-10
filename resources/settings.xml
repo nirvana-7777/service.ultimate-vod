@@ -11,8 +11,13 @@
         <setting id="sync_interval" type="number" label="Sync interval (minutes)" default="60"/>
         <setting id="library_path" type="text" label="Library Cache Path"
                  default="special://profile/addon_data/service.ultimate-vod/cache"/>
+
+        <!-- NEW: Add to library button -->
+        <setting id="add_source" type="action" label="Add to Kodi Library (One-Time Setup)"
+                 action="RunScript(service.ultimate-vod, addsource)"/>
+
         <setting id="sync_now" type="action" label="Sync Now"
-                 action="RunScript(special://home/addons/service.ultimate-vod, sync)"/>
+                 action="RunScript(service.ultimate-vod, sync)"/>
     </category>
 
     <category label="Status">
@@ -25,6 +30,6 @@
         <setting id="last_sync_time" type="text" label="Last Sync Time" default="" visible="false"/>
         <setting id="log_level" type="enum" label="Log Level" values="ERROR|INFO|DEBUG" default="INFO"/>
         <setting id="clear_cache" type="action" label="Clear Cache"
-                 action="RunScript(special://home/addons/service.ultimate-vod, clear)"/>
+                 action="RunScript(service.ultimate-vod, clear)"/>
     </category>
 </settings>
