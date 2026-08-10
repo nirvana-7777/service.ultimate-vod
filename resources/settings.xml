@@ -2,17 +2,29 @@
 <settings>
     <category label="Crawler Connection">
         <setting id="crawler_url" type="text" label="Crawler API URL" default="http://localhost:7888"/>
-        <setting id="crawler_enabled" type="bool" label="Enable Library Sync" default="false"/>
+        <setting id="crawler_enabled" type="bool" label="Enable automatic library sync" default="true"/>
+        <setting id="crawler_timeout" type="number" label="API timeout (seconds)" default="30"/>
     </category>
-    
+
     <category label="Sync Settings">
-        <setting id="auto_sync" type="bool" label="Auto-sync on Kodi startup" default="true"/>
-        <setting id="sync_interval" type="number" label="Sync interval (seconds)" default="3600"/>
-        <setting id="library_path" type="text" label="Library Cache Path" 
+        <setting id="sync_on_startup" type="bool" label="Sync on Kodi startup" default="true"/>
+        <setting id="sync_interval" type="number" label="Sync interval (minutes)" default="60"/>
+        <setting id="library_path" type="text" label="Library Cache Path"
                  default="special://profile/addon_data/service.ultimate-vod/cache"/>
+        <setting id="sync_now" type="action" label="Sync Now"
+                 action="RunScript(special://home/addons/service.ultimate-vod, sync)"/>
     </category>
-    
+
+    <category label="Status">
+        <setting id="sync_status" type="text" label="Sync Status" default="Idle" visible="true"/>
+        <setting id="last_sync_display" type="text" label="Last Sync" default="Never" visible="true"/>
+        <setting id="items_count" type="text" label="Items in Library" default="0" visible="true"/>
+    </category>
+
     <category label="Advanced">
         <setting id="last_sync_time" type="text" label="Last Sync Time" default="" visible="false"/>
+        <setting id="log_level" type="enum" label="Log Level" values="ERROR|INFO|DEBUG" default="INFO"/>
+        <setting id="clear_cache" type="action" label="Clear Cache"
+                 action="RunScript(special://home/addons/service.ultimate-vod, clear)"/>
     </category>
 </settings>
