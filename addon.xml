@@ -5,17 +5,18 @@
         <import addon="script.module.requests" version="2.31.0"/>
         <import addon="plugin.video.ultimate" version="2.0.0" optional="true"/>
     </requires>
-    
+
     <!-- Service entry point - runs on Kodi startup -->
     <extension point="xbmc.service" library="service.py" start="startup">
         <provides>service</provides>
     </extension>
-    
+
     <!-- Executable entry point - allows manual sync via RunScript -->
-    <extension point="xbmc.addon" library="service.py">
+    <extension point="xbmc.executable" library="service.py">
         <provides>executable</provides>
     </extension>
-    
+
+    <!-- ALL YOUR METADATA STAYS HERE -->
     <extension point="xbmc.addon.metadata">
         <!-- Basic Information -->
         <summary lang="en_GB">Ultimate VOD Library Sync Service</summary>
@@ -27,44 +28,44 @@
         <summary lang="nl_NL">Ultimate VOD Bibliotheek Synchronisatie Service</summary>
         <summary lang="pl_PL">Usługa synchronizacji biblioteki Ultimate VOD</summary>
         <summary lang="ru_RU">Служба синхронизации библиотеки Ultimate VOD</summary>
-        
+
         <!-- Extended Description -->
         <description lang="en_GB">
-            Background service for Ultimate VOD that automatically syncs your VOD library with Kodi using the crawler API. 
-            Features incremental updates, cross-process safety, and configurable schedules. 
+            Background service for Ultimate VOD that automatically syncs your VOD library with Kodi using the crawler API.
+            Features incremental updates, cross-process safety, and configurable schedules.
             Supports movies, TV shows, and automatic library scanning.
         </description>
-        
+
         <description lang="en_US">
-            Background service for Ultimate VOD that automatically syncs your VOD library with Kodi using the crawler API. 
-            Features incremental updates, cross-process safety, and configurable schedules. 
+            Background service for Ultimate VOD that automatically syncs your VOD library with Kodi using the crawler API.
+            Features incremental updates, cross-process safety, and configurable schedules.
             Supports movies, TV shows, and automatic library scanning.
         </description>
-        
+
         <description lang="de_DE">
-            Hintergrunddienst für Ultimate VOD, der Ihre VOD-Bibliothek automatisch mit Kodi über die Crawler-API synchronisiert. 
-            Bietet inkrementelle Updates, prozessübergreifende Sicherheit und konfigurierbare Zeitpläne. 
+            Hintergrunddienst für Ultimate VOD, der Ihre VOD-Bibliothek automatisch mit Kodi über die Crawler-API synchronisiert.
+            Bietet inkrementelle Updates, prozessübergreifende Sicherheit und konfigurierbare Zeitpläne.
             Unterstützt Filme, Serien und automatische Bibliotheksscans.
         </description>
-        
+
         <!-- Disclaimer -->
         <disclaimer lang="en_GB">Requires a VOD crawler API endpoint. Configure the crawler URL in addon settings.</disclaimer>
         <disclaimer lang="en_US">Requires a VOD crawler API endpoint. Configure the crawler URL in addon settings.</disclaimer>
-        
+
         <!-- Platform Support -->
         <platform>all</platform>
-        
+
         <!-- License -->
         <license>MIT</license>
-        
+
         <!-- Links -->
         <source>https://github.com/nirvana-7777/service.ultimate-vod</source>
         <forum>https://forum.kodi.tv/showthread.php?tid=YOUR_THREAD_ID</forum>
         <website>https://your-website.com/ultimate-vod-service</website>
-        
+
         <!-- Contact -->
         <email>support@example.com</email>
-        
+
         <!-- Assets -->
         <assets>
             <icon>resources/assets/icon.png</icon>
@@ -73,7 +74,7 @@
             <screenshot>resources/assets/screenshot2.jpg</screenshot>
             <screenshot>resources/assets/screenshot3.jpg</screenshot>
         </assets>
-        
+
         <!-- Version News -->
         <news>
             v1.0.0 (2024-01-01):
@@ -89,30 +90,14 @@
             - Support for Kodi 18+ and Python 3.0+
             - Cross-platform: Linux, macOS, Windows, Android, Raspberry Pi
         </news>
-        
+
         <!-- Kodi Version Requirements -->
         <minversion>18.0</minversion>
         <maxversion>21.0</maxversion>
-        
+
         <!-- Support Status -->
         <support>
             <op>1</op>  <!-- 1 = Supported by developer -->
         </support>
-        
-        <!-- Addon Dependencies -->
-        <dependency>
-            <import addon="xbmc.python" version="3.0.0"/>
-            <import addon="script.module.requests" version="2.31.0"/>
-        </dependency>
-        
-        <!-- Video Extensions (for .strm files) -->
-        <extension point="xbmc.video">
-            <provides>video</provides>
-            <extension>
-                <name>.strm</name>
-                <source>strm</source>
-                <mimetype>application/octet-stream</mimetype>
-            </extension>
-        </extension>
     </extension>
 </addon>
