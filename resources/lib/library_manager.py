@@ -419,74 +419,84 @@ class LibraryManager:
         """Tell Kodi to scan the library"""
         xbmc.executebuiltin("UpdateLibrary(video)")
 
-    def _is_source_added(self) -> bool:
-        """Check if the cache directory is already a Kodi video source"""
-        import json
-        result = xbmc.executeJSONRPC(json.dumps({
-            "jsonrpc": "2.0",
-            "method": "Files.GetSources",
-            "params": {"media": "video"},
-            "id": 1
-        }))
-        try:
-            data = json.loads(result)
-            sources = data.get('result', {}).get('sources', [])
+    @staticmethod
+    def _is_source_added() -> bool:
+        """Check if the cache directory is already in sources.xml"""
+        import xml.etree.ElementTree as ET
 
-            # Get the raw path from settings
-            raw_setting_path = get_setting('library_path', 'special://profile/addon_data/service.ultimate-vod/cache')
-            # Normalize both paths for comparison
-            cache_path = xbmcvfs.translatePath(raw_setting_path)
-
-            for source in sources:
-                source_path = xbmcvfs.translatePath(source.get('file', ''))
-                if source_path == cache_path:
-                    return True
-        except Exception as e:
-            xbmc.log(f"{LOG_PREFIX} Error checking sources: {e}", xbmc.LOGWARNING)
-        return False
-
-    def add_source_to_library(self) -> Tuple[bool, str]:
-        """Automatically add the cache folder to Kodi's video sources.
-        Returns a tuple of (success: bool, error_message: str)"""
-
-        if self._is_source_added():
-            xbmc.log(f"{LOG_PREFIX} Source already exists, skipping", xbmc.LOGINFO)
-            return True, "already_exists"
-
-        import json
-
-        # Use the raw path (e.g. special://...) as Kodi prefers this for internal sources
+        sources_path = xbmcvfs.translatePath('special://profile/sources.xml')
         raw_path = get_setting('library_path', 'special://profile/addon_data/service.ultimate-vod/cache')
-
-        # Kodi source paths must end with a slash
         if not raw_path.endswith('/') and not raw_path.endswith('\\'):
             raw_path += '/'
 
-        params = {
-            "source": {
-                "name": "Ultimate VOD",
-                "path": raw_path
-            }
-        }
-
-        result = xbmc.executeJSONRPC(json.dumps({
-            "jsonrpc": "2.0",
-            "method": "Files.AddSource",
-            "params": params,
-            "id": 1
-        }))
+        if not xbmcvfs.exists(sources_path):
+            return False
 
         try:
-            data = json.loads(result)
-            if 'error' in data:
-                err_msg = data['error'].get('message', 'Unknown JSON-RPC error')
-                xbmc.log(f"{LOG_PREFIX} Failed to add source: {data['error']}", xbmc.LOGERROR)
-                return False, err_msg
+            tree = ET.parse(sources_path)
+            root = tree.getroot()
+            video_node = root.find('video')
+            if video_node is None:
+                return False
 
-            xbmc.log(f"{LOG_PREFIX} Source added successfully", xbmc.LOGINFO)
+            for source in video_node.findall('source'):
+                path_node = source.find('path')
+                if path_node is not None and path_node.text == raw_path:
+                    return True
+        except Exception as e:
+            xbmc.log(f"{LOG_PREFIX} Error checking sources.xml: {e}", xbmc.LOGWARNING)
+
+        return False
+
+    def add_source_to_library(self) -> Tuple[bool, str]:
+        """Automatically add the cache folder to Kodi's sources.xml"""
+        import xml.etree.ElementTree as ET
+        from xml.dom import minidom
+
+        if self._is_source_added():
+            return True, "already_exists"
+
+        sources_path = xbmcvfs.translatePath('special://profile/sources.xml')
+        raw_path = get_setting('library_path', 'special://profile/addon_data/service.ultimate-vod/cache')
+        if not raw_path.endswith('/') and not raw_path.endswith('\\'):
+            raw_path += '/'
+
+        try:
+            # Parse existing sources.xml or create a new one
+            try:
+                tree = ET.parse(sources_path)
+                root = tree.getroot()
+            except (IOError, FileNotFoundError):
+                root = ET.Element('sources')
+                tree = ET.ElementTree(root)
+
+            # Find or create <video> section
+            video_node = root.find('video')
+            if video_node is None:
+                video_node = ET.SubElement(root, 'video')
+                ET.SubElement(video_node, 'default', {'pathversion': '1'})
+
+            # Create new source node
+            source_node = ET.SubElement(video_node, 'source')
+            name_node = ET.SubElement(source_node, 'name')
+            name_node.text = "Ultimate VOD"
+            path_node = ET.SubElement(source_node, 'path')
+            path_node.set('pathversion', '1')
+            path_node.text = raw_path
+            allowsharing_node = ET.SubElement(source_node, 'allowsharing')
+            allowsharing_node.text = "true"
+
+            # Write back to file with pretty formatting
+            xml_str = ET.tostring(root, encoding='utf-8')
+            pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ", encoding='utf-8')
+
+            with open(sources_path, 'wb') as f:
+                f.write(pretty_xml)
+
+            xbmc.log(f"{LOG_PREFIX} Source added to sources.xml successfully", xbmc.LOGINFO)
             return True, ""
         except Exception as e:
-            xbmc.log(f"{LOG_PREFIX} Exception adding source: {e}", xbmc.LOGERROR)
+            xbmc.log(f"{LOG_PREFIX} Exception adding source to XML: {e}", xbmc.LOGERROR)
             return False, str(e)
 
     def clear_cache(self) -> None:
