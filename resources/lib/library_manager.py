@@ -431,11 +431,13 @@ class LibraryManager:
         try:
             data = json.loads(result)
             sources = data.get('result', {}).get('sources', [])
-            # Normalize our cache path for comparison
-            cache_path = xbmcvfs.translatePath(str(self.cache_dir))
+
+            # Get the raw path from settings
+            raw_setting_path = get_setting('library_path', 'special://profile/addon_data/service.ultimate-vod/cache')
+            # Normalize both paths for comparison
+            cache_path = xbmcvfs.translatePath(raw_setting_path)
 
             for source in sources:
-                # Normalize the source path from Kodi
                 source_path = xbmcvfs.translatePath(source.get('file', ''))
                 if source_path == cache_path:
                     return True
@@ -443,23 +445,27 @@ class LibraryManager:
             xbmc.log(f"{LOG_PREFIX} Error checking sources: {e}", xbmc.LOGWARNING)
         return False
 
-    def add_source_to_library(self) -> bool:
-        """Automatically add the cache folder to Kodi's video sources"""
+    def add_source_to_library(self) -> Tuple[bool, str]:
+        """Automatically add the cache folder to Kodi's video sources.
+        Returns a tuple of (success: bool, error_message: str)"""
+
         if self._is_source_added():
             xbmc.log(f"{LOG_PREFIX} Source already exists, skipping", xbmc.LOGINFO)
-            return True
+            return True, "already_exists"
 
         import json
 
-        # JSON-RPC requires directory paths to end with a slash
-        cache_path = str(self.cache_dir)
-        if not cache_path.endswith('/') and not cache_path.endswith('\\'):
-            cache_path += '/'
+        # Use the raw path (e.g. special://...) as Kodi prefers this for internal sources
+        raw_path = get_setting('library_path', 'special://profile/addon_data/service.ultimate-vod/cache')
+
+        # Kodi source paths must end with a slash
+        if not raw_path.endswith('/') and not raw_path.endswith('\\'):
+            raw_path += '/'
 
         params = {
             "source": {
                 "name": "Ultimate VOD",
-                "path": cache_path
+                "path": raw_path
             }
         }
 
@@ -473,13 +479,15 @@ class LibraryManager:
         try:
             data = json.loads(result)
             if 'error' in data:
+                err_msg = data['error'].get('message', 'Unknown JSON-RPC error')
                 xbmc.log(f"{LOG_PREFIX} Failed to add source: {data['error']}", xbmc.LOGERROR)
-                return False
+                return False, err_msg
+
             xbmc.log(f"{LOG_PREFIX} Source added successfully", xbmc.LOGINFO)
-            return True
+            return True, ""
         except Exception as e:
             xbmc.log(f"{LOG_PREFIX} Exception adding source: {e}", xbmc.LOGERROR)
-            return False
+            return False, str(e)
 
     def clear_cache(self) -> None:
         """Clear the entire library cache"""
