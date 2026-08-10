@@ -198,7 +198,7 @@ class UltimateService:
                 self.library_manager = self._safe_create_library_manager()
             else:
                 xbmc.log(f"{LOG_PREFIX} Deferring LibraryManager recreation until "
-                         f"current sync finishes", xbmc.LOGDEBUG)
+                          f"current sync finishes", xbmc.LOGDEBUG)
 
         interval_changed = new_interval != self.sync_interval
         if interval_changed:
@@ -220,7 +220,7 @@ def main():
                 manager = LibraryManager()
             except Exception as e:
                 xbmc.log(f"{LOG_PREFIX} Failed to create LibraryManager for manual sync: {e}",
-                         xbmc.LOGERROR)
+                          xbmc.LOGERROR)
                 xbmcgui.Dialog().notification(
                     "Ultimate VOD", "Sync failed: could not initialize", xbmcgui.NOTIFICATION_ERROR, 4000
                 )
@@ -249,7 +249,6 @@ def main():
             try:
                 manager = LibraryManager()
                 success, error_msg = manager.add_source_to_library()
-
                 if success and error_msg == "already_exists":
                     xbmcgui.Dialog().notification(
                         "Ultimate VOD", "Source is already added!", xbmcgui.NOTIFICATION_INFO, 4000
@@ -258,17 +257,15 @@ def main():
                     xbmcgui.Dialog().ok(
                         "Ultimate VOD",
                         "Library source added successfully!\n\n"
-                        "You can now find 'Ultimate VOD' in your Kodi Video sources. "
-                        "You do not need to run this again."
+                        "You can now find 'Ultimate VOD' in your Kodi Video sources.\n"
+                        "If it doesn't appear immediately, please restart Kodi."
                     )
-                    # Trigger a library scan right after adding
                     xbmc.executebuiltin("UpdateLibrary(video)")
                 else:
-                    # Display the EXACT error Kodi returned
                     xbmcgui.Dialog().ok(
                         "Ultimate VOD",
                         f"Failed to add source automatically.\n\n"
-                        f"Kodi reported: {error_msg}\n\n"
+                        f"Error: {error_msg}\n\n"
                         "Please add it manually:\n"
                         "1. Go to Videos > Files > Add Videos...\n"
                         "2. Browse to your Ultimate VOD cache folder."
