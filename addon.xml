@@ -11,11 +11,6 @@
         <provides>service</provides>
     </extension>
 
-    <!-- Executable entry point - allows manual sync via RunScript -->
-    <extension point="xbmc.executable" library="service.py">
-        <provides>executable</provides>
-    </extension>
-
     <!-- ALL YOUR METADATA STAYS HERE -->
     <extension point="xbmc.addon.metadata">
         <!-- Basic Information -->
@@ -92,8 +87,7 @@
         </news>
 
         <!-- Kodi Version Requirements -->
-        <minversion>18.0</minversion>
-        <maxversion>21.0</maxversion>
+        <minversion>19.0</minversion>
 
         <!-- Support Status -->
         <support>
