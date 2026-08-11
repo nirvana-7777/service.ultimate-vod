@@ -175,7 +175,7 @@ class UltimateService:
         """
         new_enabled = get_setting_bool('crawler_enabled')
         new_url = get_setting('crawler_url')
-        new_interval = get_setting_int('sync_interval', 3600)
+        new_interval = get_setting_int('sync_interval', 60)
 
         if new_enabled != self.enabled:
             xbmc.log(f"{LOG_PREFIX} Crawler enabled changed: {new_enabled}", xbmc.LOGINFO)
@@ -220,7 +220,7 @@ def main():
                 )
                 return
 
-            success, message, stats = manager.sync(show_progress=True)
+            success, message, stats = manager.sync(show_progress=True, force_full=True)
 
             if success:
                 xbmcgui.Dialog().notification(
@@ -235,39 +235,6 @@ def main():
                     f"Sync failed: {message}",
                     xbmcgui.NOTIFICATION_ERROR,
                     4000
-                )
-            return
-
-        elif sys.argv[1] == 'addsource':
-            xbmc.log(f"{LOG_PREFIX} Add source triggered via script", xbmc.LOGINFO)
-            try:
-                manager = LibraryManager()
-                success, error_msg = manager.add_source_to_library()
-                if success and error_msg == "already_exists":
-                    xbmcgui.Dialog().notification(
-                        "Ultimate VOD", "Source is already added!", xbmcgui.NOTIFICATION_INFO, 4000
-                    )
-                elif success:
-                    xbmcgui.Dialog().ok(
-                        "Ultimate VOD",
-                        "Library source added successfully!\n\n"
-                        "You can now find 'Ultimate VOD' in your Kodi Video sources.\n"
-                        "If it doesn't appear immediately, please restart Kodi."
-                    )
-                    xbmc.executebuiltin("UpdateLibrary(video)")
-                else:
-                    xbmcgui.Dialog().ok(
-                        "Ultimate VOD",
-                        f"Failed to add source automatically.\n\n"
-                        f"Error: {error_msg}\n\n"
-                        "Please add it manually:\n"
-                        "1. Go to Videos > Files > Add Videos...\n"
-                        "2. Browse to your Ultimate VOD cache folder."
-                    )
-            except Exception as e:
-                xbmc.log(f"{LOG_PREFIX} Failed to add source: {e}", xbmc.LOGERROR)
-                xbmcgui.Dialog().notification(
-                    "Ultimate VOD", "Failed to add source", xbmcgui.NOTIFICATION_ERROR, 4000
                 )
             return
 

@@ -12,8 +12,6 @@
         <setting id="sync_interval" type="number" label="30012" default="60"/>
         <setting id="library_path" type="text" label="30013"
                  default="special://profile/addon_data/service.ultimate-vod/cache"/>
-        <setting id="add_source" type="action" label="30014"
-                 action="RunScript(service.ultimate-vod, addsource)"/>
         <setting id="sync_now" type="action" label="30015"
                  action="RunScript(service.ultimate-vod, sync)"/>
     </category>

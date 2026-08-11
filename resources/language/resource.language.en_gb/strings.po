@@ -48,13 +48,9 @@ msgctxt "#30013"
 msgid "Library Cache Path"
 msgstr "Library Cache Path"
 
-msgctxt "#30014"
-msgid "Manually Add/Verify Kodi Source"
-msgstr "Manually Add/Verify Kodi Source"
-
 msgctxt "#30015"
-msgid "Sync Now"
-msgstr "Sync Now"
+msgid "Sync Now (Full Resync)"
+msgstr "Sync Now (Full Resync)"
 
 msgctxt "#30020"
 msgid "Status"

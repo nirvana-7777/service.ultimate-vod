@@ -68,7 +68,7 @@ class LibraryManager:
 
         return counts
 
-    def sync(self, show_progress: bool = False) -> Tuple[bool, str, Dict]:
+    def sync(self, show_progress: bool = False, force_full: bool = False) -> Tuple[bool, str, Dict]:
         if not self.is_enabled():
             return False, "Crawler integration disabled", {}
 
@@ -79,7 +79,7 @@ class LibraryManager:
 
         try:
             with FileLock(self.lock_path, timeout=30):
-                return self._sync_locked(progress)
+                return self._sync_locked(progress, force_full)
         except LockTimeoutError as e:
             xbmc.log(f"{LOG_PREFIX} {e}", xbmc.LOGWARNING)
             if progress:
@@ -91,11 +91,11 @@ class LibraryManager:
                 progress.close()
             return False, f"Sync error: {str(e)}", {}
 
-    def _sync_locked(self, progress) -> Tuple[bool, str, Dict]:
+    def _sync_locked(self, progress, force_full: bool = False) -> Tuple[bool, str, Dict]:
         if progress:
             progress.update(10, message="Fetching library data...")
 
-        since = self.last_sync if self.last_sync else None
+        since = None if force_full else (self.last_sync if self.last_sync else None)
         data = self.client.get_export(since=since)
 
         if not data:
