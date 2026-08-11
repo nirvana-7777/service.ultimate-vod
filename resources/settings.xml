@@ -7,7 +7,8 @@
     </category>
 
     <category label="30010"> <!-- Sync Settings -->
-        <setting id="sync_on_startup" type="bool" label="30011" default="true"/>
+        <!-- FIX: Changed id to auto_sync to match Python code -->
+        <setting id="auto_sync" type="bool" label="30011" default="true"/>
         <setting id="sync_interval" type="number" label="30012" default="60"/>
         <setting id="library_path" type="text" label="30013"
                  default="special://profile/addon_data/service.ultimate-vod/cache"/>
