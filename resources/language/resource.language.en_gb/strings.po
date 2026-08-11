@@ -16,74 +16,74 @@ msgstr ""
 "Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgctxt "30000"
+msgctxt "#30000"
 msgid "Crawler Connection"
 msgstr "Crawler Connection"
 
-msgctxt "30001"
+msgctxt "#30001"
 msgid "Crawler API URL"
 msgstr "Crawler API URL"
 
-msgctxt "30002"
+msgctxt "#30002"
 msgid "Enable automatic library sync"
 msgstr "Enable automatic library sync"
 
-msgctxt "30003"
+msgctxt "#30003"
 msgid "API timeout (seconds)"
 msgstr "API timeout (seconds)"
 
-msgctxt "30010"
+msgctxt "#30010"
 msgid "Sync Settings"
 msgstr "Sync Settings"
 
-msgctxt "30011"
+msgctxt "#30011"
 msgid "Sync on Kodi startup"
 msgstr "Sync on Kodi startup"
 
-msgctxt "30012"
+msgctxt "#30012"
 msgid "Sync interval (minutes)"
 msgstr "Sync interval (minutes)"
 
-msgctxt "30013"
+msgctxt "#30013"
 msgid "Library Cache Path"
 msgstr "Library Cache Path"
 
-msgctxt "30014"
+msgctxt "#30014"
 msgid "Manually Add/Verify Kodi Source"
 msgstr "Manually Add/Verify Kodi Source"
 
-msgctxt "30015"
+msgctxt "#30015"
 msgid "Sync Now"
 msgstr "Sync Now"
 
-msgctxt "30020"
+msgctxt "#30020"
 msgid "Status"
 msgstr "Status"
 
-msgctxt "30021"
+msgctxt "#30021"
 msgid "Sync Status"
 msgstr "Sync Status"
 
-msgctxt "30022"
+msgctxt "#30022"
 msgid "Last Sync"
 msgstr "Last Sync"
 
-msgctxt "30023"
+msgctxt "#30023"
 msgid "Items in Library"
 msgstr "Items in Library"
 
-msgctxt "30030"
+msgctxt "#30030"
 msgid "Advanced"
 msgstr "Advanced"
 
-msgctxt "30031"
+msgctxt "#30031"
 msgid "Last Sync Time"
 msgstr "Last Sync Time"
 
-msgctxt "30032"
+msgctxt "#30032"
 msgid "Log Level"
 msgstr "Log Level"
 
-msgctxt "30033"
+msgctxt "#30033"
 msgid "Clear Cache"
 msgstr "Clear Cache"
