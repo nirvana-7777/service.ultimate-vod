@@ -37,7 +37,12 @@ class UltimateService:
         self.crawler_url = get_setting('crawler_url')
         self.enabled = get_setting_bool('crawler_enabled')
         self.auto_sync = get_setting_bool('auto_sync')
-        self.sync_interval = get_setting_int('sync_interval', 3600)  # Default 1 hour
+
+        # Track raw interval (in minutes) for change detection, but use
+        # floored interval (in seconds) for scheduling.
+        self._raw_sync_interval = get_setting_int('sync_interval', 60)
+        interval_seconds = self._raw_sync_interval * 60
+        self.sync_interval = max(60, interval_seconds) if interval_seconds > 0 else 3600
 
         # State
         self.is_syncing = False
@@ -65,6 +70,10 @@ class UltimateService:
         """Main service loop"""
         xbmc.log(f"{LOG_PREFIX} Starting service", xbmc.LOGINFO)
 
+        # Automatically ensure the library source is added to Kodi on startup.
+        if self.library_manager:
+            self.library_manager.add_source_to_library()
+
         # Perform initial sync on startup
         if self.enabled and self.auto_sync:
             self._schedule_sync(delay=5)  # Wait 5 seconds for Kodi to fully start
@@ -88,10 +97,6 @@ class UltimateService:
                     next_sync_time = time.time() + self.sync_interval
 
             except Exception as e:
-                # A single bad iteration (e.g. a setting change that fails
-                # to reconstruct LibraryManager) must not kill the service
-                # loop - there is no supervisor to restart it until the
-                # next full Kodi restart.
                 xbmc.log(f"{LOG_PREFIX} Unexpected error in service loop: {e}", xbmc.LOGERROR)
 
             # Sleep a bit
@@ -118,12 +123,10 @@ class UltimateService:
 
                 xbmc.log(f"{LOG_PREFIX} Starting scheduled sync", xbmc.LOGINFO)
 
-                # Check if crawler is available
                 if not self.library_manager.is_enabled():
                     xbmc.log(f"{LOG_PREFIX} Crawler not available, skipping sync", xbmc.LOGWARNING)
                     return
 
-                # Perform sync
                 success, message, stats = self.library_manager.sync(show_progress=False)
 
                 if success:
@@ -131,7 +134,6 @@ class UltimateService:
                     set_setting('last_sync_time', self.last_sync)
                     xbmc.log(f"{LOG_PREFIX} Sync complete: {stats}", xbmc.LOGINFO)
 
-                    # Show notification if content was added
                     if stats.get('added', 0) > 0:
                         self._show_notification(
                             f"Added {stats['added']} items to library",
@@ -156,13 +158,11 @@ class UltimateService:
             finally:
                 self.is_syncing = False
 
-        # Run in thread to not block
         thread = threading.Thread(target=do_sync, daemon=True)
         thread.start()
 
     @staticmethod
     def _show_notification(message, icon=xbmcgui.NOTIFICATION_INFO):
-        """Show a Kodi notification"""
         try:
             xbmcgui.Dialog().notification("Ultimate VOD", message, icon, 4000)
         except Exception as e:
@@ -171,9 +171,7 @@ class UltimateService:
     def _check_settings_changed(self) -> bool:
         """
         Check if settings have changed.
-
-        Returns True if sync_interval changed, so the caller can re-anchor
-        its schedule.
+        Returns True if sync_interval changed, so the caller can re-anchor its schedule.
         """
         new_enabled = get_setting_bool('crawler_enabled')
         new_url = get_setting('crawler_url')
@@ -187,23 +185,20 @@ class UltimateService:
             xbmc.log(f"{LOG_PREFIX} Crawler URL changed: {new_url}", xbmc.LOGINFO)
             self.crawler_url = new_url
 
-            # Don't tear down/replace the library manager while a sync is
-            # in flight - the old LibraryManager instance may still be
-            # mid-write against the cache directory, and swapping it out
-            # here would let two instances touch the same files
-            # concurrently. Defer the recreation until the current sync
-            # (if any) finishes; it will pick up the new URL on the next
-            # settings check.
             if not self.is_syncing:
                 self.library_manager = self._safe_create_library_manager()
             else:
                 xbmc.log(f"{LOG_PREFIX} Deferring LibraryManager recreation until "
-                          f"current sync finishes", xbmc.LOGDEBUG)
+                         f"current sync finishes", xbmc.LOGDEBUG)
 
-        interval_changed = new_interval != self.sync_interval
+        # Compare against the raw setting (in minutes) to detect actual user changes
+        interval_changed = new_interval != self._raw_sync_interval
         if interval_changed:
-            xbmc.log(f"{LOG_PREFIX} Sync interval changed: {new_interval}s", xbmc.LOGINFO)
-            self.sync_interval = new_interval
+            xbmc.log(f"{LOG_PREFIX} Sync interval changed: {new_interval} min", xbmc.LOGINFO)
+            self._raw_sync_interval = new_interval
+            # Convert minutes to seconds and apply floor validation
+            interval_seconds = new_interval * 60
+            self.sync_interval = max(60, interval_seconds) if interval_seconds > 0 else 3600
 
         return interval_changed
 
@@ -211,7 +206,6 @@ class UltimateService:
 def main():
     """Entry point - handles both service and manual sync modes"""
 
-    # Check if we were called with arguments (e.g., from RunScript)
     if len(sys.argv) > 1:
         if sys.argv[1] == 'sync':
             xbmc.log(f"{LOG_PREFIX} Manual sync triggered via script", xbmc.LOGINFO)
@@ -220,7 +214,7 @@ def main():
                 manager = LibraryManager()
             except Exception as e:
                 xbmc.log(f"{LOG_PREFIX} Failed to create LibraryManager for manual sync: {e}",
-                          xbmc.LOGERROR)
+                         xbmc.LOGERROR)
                 xbmcgui.Dialog().notification(
                     "Ultimate VOD", "Sync failed: could not initialize", xbmcgui.NOTIFICATION_ERROR, 4000
                 )
@@ -242,7 +236,7 @@ def main():
                     xbmcgui.NOTIFICATION_ERROR,
                     4000
                 )
-            return  # Exit immediately, do not start the loop!
+            return
 
         elif sys.argv[1] == 'addsource':
             xbmc.log(f"{LOG_PREFIX} Add source triggered via script", xbmc.LOGINFO)
@@ -275,12 +269,8 @@ def main():
                 xbmcgui.Dialog().notification(
                     "Ultimate VOD", "Failed to add source", xbmcgui.NOTIFICATION_ERROR, 4000
                 )
-            return  # Exit immediately, do not start the loop!
+            return
 
-    # Normal startup - start the service. A failure here is caught and
-    # logged rather than left to crash the interpreter, since an unhandled
-    # exception in service startup silently disables the addon for the
-    # rest of the Kodi session with only a traceback in kodi.log.
     try:
         service = UltimateService()
         service.run()

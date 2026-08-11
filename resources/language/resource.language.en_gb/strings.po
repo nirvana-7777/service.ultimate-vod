@@ -1,73 +1,89 @@
-# Settings
-msgctxt "#30000"
-msgid "Crawler API URL"
-msgstr "Crawler API URL"
+# Kodi Media Center language file
+# Addon Name: Ultimate VOD Service
+# Addon id: service.ultimate-vod
+# Addon Provider: Nirvana777
+msgid ""
+msgstr ""
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Nirvana777\n"
+"Language-Team: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgctxt "#30001"
-msgid "Enable automatic library sync"
-msgstr "Enable automatic library sync"
-
-msgctxt "#30002"
-msgid "Sync on Kodi startup"
-msgstr "Sync on Kodi startup"
-
-msgctxt "#30003"
-msgid "Sync interval (minutes)"
-msgstr "Sync interval (minutes)"
-
-msgctxt "#30004"
-msgid "Library Cache Path"
-msgstr "Library Cache Path"
-
-msgctxt "#30005"
-msgid "Last Sync Time"
-msgstr "Last Sync Time"
-
-msgctxt "#30006"
+msgctxt "30000"
 msgid "Crawler Connection"
 msgstr "Crawler Connection"
 
-msgctxt "#30007"
+msgctxt "30001"
+msgid "Crawler API URL"
+msgstr "Crawler API URL"
+
+msgctxt "30002"
+msgid "Enable automatic library sync"
+msgstr "Enable automatic library sync"
+
+msgctxt "30003"
+msgid "API timeout (seconds)"
+msgstr "API timeout (seconds)"
+
+msgctxt "30010"
 msgid "Sync Settings"
 msgstr "Sync Settings"
 
-msgctxt "#30008"
-msgid "Sync Status"
-msgstr "Sync Status"
+msgctxt "30011"
+msgid "Sync on Kodi startup"
+msgstr "Sync on Kodi startup"
 
-msgctxt "#30009"
-msgid "Idle"
-msgstr "Idle"
+msgctxt "30012"
+msgid "Sync interval (minutes)"
+msgstr "Sync interval (minutes)"
 
-msgctxt "#30010"
-msgid "Never"
-msgstr "Never"
+msgctxt "30013"
+msgid "Library Cache Path"
+msgstr "Library Cache Path"
 
-msgctxt "#30011"
-msgid "Items in Library"
-msgstr "Items in Library"
+msgctxt "30014"
+msgid "Manually Add/Verify Kodi Source"
+msgstr "Manually Add/Verify Kodi Source"
 
-msgctxt "#30012"
+msgctxt "30015"
 msgid "Sync Now"
 msgstr "Sync Now"
 
-msgctxt "#30013"
-msgid "Clear Cache"
-msgstr "Clear Cache"
+msgctxt "30020"
+msgid "Status"
+msgstr "Status"
 
-msgctxt "#30014"
+msgctxt "30021"
+msgid "Sync Status"
+msgstr "Sync Status"
+
+msgctxt "30022"
+msgid "Last Sync"
+msgstr "Last Sync"
+
+msgctxt "30023"
+msgid "Items in Library"
+msgstr "Items in Library"
+
+msgctxt "30030"
 msgid "Advanced"
 msgstr "Advanced"
 
-# Notifications
-msgctxt "#30100"
-msgid "Sync complete: {0} added"
-msgstr "Sync complete: {0} added"
+msgctxt "30031"
+msgid "Last Sync Time"
+msgstr "Last Sync Time"
 
-msgctxt "#30101"
-msgid "Sync failed: {0}"
-msgstr "Sync failed: {0}"
+msgctxt "30032"
+msgid "Log Level"
+msgstr "Log Level"
 
-msgctxt "#30102"
-msgid "Sync started"
-msgstr "Sync started"
+msgctxt "30033"
+msgid "Clear Cache"
+msgstr "Clear Cache"

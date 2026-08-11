@@ -1,35 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <settings>
-    <category label="Crawler Connection">
-        <setting id="crawler_url" type="text" label="Crawler API URL" default="http://localhost:7888"/>
-        <setting id="crawler_enabled" type="bool" label="Enable automatic library sync" default="true"/>
-        <setting id="crawler_timeout" type="number" label="API timeout (seconds)" default="30"/>
+    <category label="30000"> <!-- Crawler Connection -->
+        <setting id="crawler_url" type="text" label="30001" default="http://localhost:7888"/>
+        <setting id="crawler_enabled" type="bool" label="30002" default="true"/>
+        <setting id="crawler_timeout" type="number" label="30003" default="30"/>
     </category>
 
-    <category label="Sync Settings">
-        <setting id="sync_on_startup" type="bool" label="Sync on Kodi startup" default="true"/>
-        <setting id="sync_interval" type="number" label="Sync interval (minutes)" default="60"/>
-        <setting id="library_path" type="text" label="Library Cache Path"
+    <category label="30010"> <!-- Sync Settings -->
+        <setting id="sync_on_startup" type="bool" label="30011" default="true"/>
+        <setting id="sync_interval" type="number" label="30012" default="60"/>
+        <setting id="library_path" type="text" label="30013"
                  default="special://profile/addon_data/service.ultimate-vod/cache"/>
-
-        <!-- NEW: Add to library button -->
-        <setting id="add_source" type="action" label="Add to Kodi Library (One-Time Setup)"
+        <setting id="add_source" type="action" label="30014"
                  action="RunScript(service.ultimate-vod, addsource)"/>
-
-        <setting id="sync_now" type="action" label="Sync Now"
+        <setting id="sync_now" type="action" label="30015"
                  action="RunScript(service.ultimate-vod, sync)"/>
     </category>
 
-    <category label="Status">
-        <setting id="sync_status" type="text" label="Sync Status" default="Idle" visible="true"/>
-        <setting id="last_sync_display" type="text" label="Last Sync" default="Never" visible="true"/>
-        <setting id="items_count" type="text" label="Items in Library" default="0" visible="true"/>
+    <category label="30020"> <!-- Status -->
+        <setting id="sync_status" type="text" label="30021" default="Idle" visible="true"/>
+        <setting id="last_sync_display" type="text" label="30022" default="Never" visible="true"/>
+        <setting id="items_count" type="text" label="30023" default="0" visible="true"/>
     </category>
 
-    <category label="Advanced">
-        <setting id="last_sync_time" type="text" label="Last Sync Time" default="" visible="false"/>
-        <setting id="log_level" type="enum" label="Log Level" values="ERROR|INFO|DEBUG" default="INFO"/>
-        <setting id="clear_cache" type="action" label="Clear Cache"
+    <category label="30030"> <!-- Advanced -->
+        <setting id="last_sync_time" type="text" label="30031" default="" visible="false"/>
+        <setting id="log_level" type="enum" label="30032" values="ERROR|INFO|DEBUG" default="INFO"/>
+        <setting id="clear_cache" type="action" label="30033"
                  action="RunScript(service.ultimate-vod, clear)"/>
     </category>
 </settings>

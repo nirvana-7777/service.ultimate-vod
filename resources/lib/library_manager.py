@@ -19,7 +19,6 @@ from lock_utils import FileLock, LockTimeoutError
 
 LOG_PREFIX = "[Ultimate VOD Service]"
 
-# Characters not safe in filesystem path components across Windows/macOS/Linux.
 _INVALID_CHARS = '<>:"/\\|?*'
 _MAX_COMPONENT_LEN = 200
 
@@ -40,12 +39,10 @@ class LibraryManager:
         self.last_sync = get_setting('last_sync_time') or None
 
     def is_enabled(self) -> bool:
-        """Check if crawler integration is enabled"""
         enabled = get_setting_bool('crawler_enabled')
         return enabled and self.client is not None and self.client.is_available()
 
     def get_status(self) -> Dict:
-        """Get current library status"""
         if not self.is_enabled():
             return {"enabled": False}
 
@@ -58,7 +55,6 @@ class LibraryManager:
         return status
 
     def _count_items(self) -> Dict[str, int]:
-        """Count items in the library cache"""
         counts = {'movies': 0, 'episodes': 0, 'shows': 0}
 
         movies_dir = self.cache_dir / "Movies"
@@ -73,15 +69,6 @@ class LibraryManager:
         return counts
 
     def sync(self, show_progress: bool = False) -> Tuple[bool, str, Dict]:
-        """
-        Sync library with crawler.
-
-        Serialized across processes via a file lock on the cache directory,
-        since a manual "sync now" invocation (separate Kodi script process)
-        can otherwise overlap with the background service's scheduled sync
-        and corrupt the .strm tree (concurrent writes + empty-dir cleanup
-        racing against files being written).
-        """
         if not self.is_enabled():
             return False, "Crawler integration disabled", {}
 
@@ -105,7 +92,6 @@ class LibraryManager:
             return False, f"Sync error: {str(e)}", {}
 
     def _sync_locked(self, progress) -> Tuple[bool, str, Dict]:
-        """The actual sync body, run while holding the cross-process lock."""
         if progress:
             progress.update(10, message="Fetching library data...")
 
@@ -127,10 +113,6 @@ class LibraryManager:
         if progress:
             progress.update(80, message="Updating Kodi library...")
 
-        # Only advance the sync watermark if nothing went wrong. If some
-        # items failed, we deliberately do NOT advance last_sync, so the
-        # next incremental export re-includes the failed items rather than
-        # silently skipping them forever.
         timestamp = data.get('timestamp')
         if timestamp and stats.get('errors', 0) == 0:
             self.last_sync = timestamp
@@ -154,17 +136,6 @@ class LibraryManager:
         return True, message, stats
 
     def _generate_strm_files(self, data: Dict, progress=None) -> Dict:
-        """
-        Generate .strm files from export data.
-
-        IDs are embedded in parentheses () for glob compatibility.
-        Kodi scrapers naturally ignore text in parentheses for titles.
-
-        Each item is processed independently: a malformed record (missing
-        required fields) is logged and skipped rather than aborting the
-        whole batch, since partial data from one bad record shouldn't cost
-        the rest of an otherwise-successful sync.
-        """
         stats = {'added': 0, 'updated': 0, 'deleted': 0, 'movies': 0, 'episodes': 0, 'errors': 0}
 
         movies = data.get('movies', [])
@@ -180,7 +151,7 @@ class LibraryManager:
             except Exception as e:
                 stats['errors'] += 1
                 xbmc.log(f"{LOG_PREFIX} Failed to process movie "
-                          f"{movie.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
+                         f"{movie.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
 
             if progress and done % 10 == 0:
                 pct = 30 + int((done / max(total, 1)) * 50)
@@ -194,7 +165,7 @@ class LibraryManager:
             except Exception as e:
                 stats['errors'] += 1
                 xbmc.log(f"{LOG_PREFIX} Failed to process episode "
-                          f"{episode.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
+                         f"{episode.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
 
             if progress and done % 10 == 0:
                 pct = 30 + int((done / max(total, 1)) * 50)
@@ -247,13 +218,6 @@ class LibraryManager:
             stats['updated'] += 1
 
     def _process_deletions(self, deleted: List[Dict], stats: Dict) -> None:
-        """
-        Delete .strm files by ID.
-
-        Builds a single {id: path} index up front instead of doing an
-        rglob() scan per deleted item, since a per-item scan is O(n) over
-        the whole library for every deletion (an N+1-style scan pattern).
-        """
         movie_index = self._build_id_index(self.cache_dir / "Movies")
         show_index = self._build_id_index(self.cache_dir / "TV Shows")
 
@@ -273,29 +237,25 @@ class LibraryManager:
             except Exception as e:
                 stats['errors'] += 1
                 xbmc.log(f"{LOG_PREFIX} Failed to process deletion "
-                          f"{item.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
+                         f"{item.get('id', '?')!r}: {e}", xbmc.LOGWARNING)
 
     @staticmethod
     def _build_id_index(root: Path) -> Dict[str, Path]:
-        """Build a {id: path} index from .strm filenames of the form
-        '... (id).strm' with a single directory walk."""
         index: Dict[str, Path] = {}
         if not root.exists():
             return index
 
+        # rglob("*.strm") intentionally ignores our atomic-write temp files
+        # (.tmp_*.strm) because leading dots are not matched by '*' on POSIX.
         for filepath in root.rglob("*.strm"):
             stem = filepath.stem
             if stem.endswith(")") and "(" in stem:
                 item_id = stem[stem.rfind("(") + 1:-1]
-                # Last write wins on duplicate IDs; duplicates shouldn't
-                # occur under normal operation but we don't want an
-                # ambiguous match to silently pick an arbitrary file.
                 index[item_id] = filepath
 
         return index
 
     def _get_movie_path(self, movie: Dict) -> Path:
-        """Get the filesystem path for a movie .strm file"""
         provider = self._clean_path_component(movie.get('provider', 'unknown'))
         provider_dir = self.cache_dir / "Movies" / provider
         provider_dir.mkdir(parents=True, exist_ok=True)
@@ -304,14 +264,20 @@ class LibraryManager:
         year = movie.get('release_year', '')
         year_str = f" ({year})" if year else ""
 
-        # Use parentheses () for ID - glob compatible and Kodi scrapers ignore them
         movie_id = movie.get('id', '')
-        filename = f"{title}{year_str} ({movie_id}).strm"
+        id_suffix = f" ({movie_id})"
+        ext = ".strm"
 
+        # Truncate title specifically so the ID suffix isn't stripped later.
+        # max(0, ...) prevents negative slicing if id_suffix exceeds the budget.
+        max_title_len = max(0, _MAX_COMPONENT_LEN - len(year_str) - len(id_suffix) - len(ext))
+        if len(title) > max_title_len:
+            title = title[:max_title_len]
+
+        filename = f"{title}{year_str}{id_suffix}{ext}"
         return provider_dir / self._clean_filename(filename)
 
     def _get_episode_path(self, episode: Dict) -> Path:
-        """Get the filesystem path for an episode .strm file"""
         show_title = self._clean_path_component(episode.get('show_title', 'Unknown Show'))
         show_dir = self.cache_dir / "TV Shows" / show_title
         season = episode.get('season_number', 1)
@@ -321,25 +287,23 @@ class LibraryManager:
         ep_num = episode.get('episode_number', 0)
         title = episode.get('title', 'Episode')
 
-        # Use parentheses () for ID - glob compatible and Kodi scrapers ignore them
         episode_id = episode.get('id', '')
-        filename = f"S{season:02d}E{ep_num:02d} - {title} ({episode_id}).strm"
+        id_suffix = f" ({episode_id})"
 
+        prefix = f"S{season:02d}E{ep_num:02d} - "
+        ext = ".strm"
+
+        # Truncate title specifically so the ID suffix isn't stripped later.
+        # max(0, ...) prevents negative slicing if id_suffix exceeds the budget.
+        max_title_len = max(0, _MAX_COMPONENT_LEN - len(prefix) - len(id_suffix) - len(ext))
+        if len(title) > max_title_len:
+            title = title[:max_title_len]
+
+        filename = f"{prefix}{title}{id_suffix}{ext}"
         return season_dir / self._clean_filename(filename)
 
     @staticmethod
     def _write_strm_file(filepath: Path, content: str) -> bool:
-        """
-        Write a .strm file atomically: write to a temp file in the same
-        directory, then os.replace() it into place. This avoids leaving a
-        truncated/corrupt .strm file behind if the process is killed
-        mid-write (e.g. container stop/OOM), which Kodi would otherwise
-        try to play and fail on.
-
-        Returns True on success, False on failure, so callers can keep
-        their added/updated/movies/episodes counters accurate instead of
-        counting writes that never actually landed.
-        """
         try:
             filepath.parent.mkdir(parents=True, exist_ok=True)
             fd, tmp_path = tempfile.mkstemp(
@@ -362,7 +326,6 @@ class LibraryManager:
 
     @staticmethod
     def _read_strm_file(filepath: Path) -> Optional[str]:
-        """Read the content of a .strm file"""
         if not filepath.exists():
             return None
         try:
@@ -373,17 +336,10 @@ class LibraryManager:
 
     @staticmethod
     def _clean_path_component(value: str) -> str:
-        """
-        Sanitize a single path component (e.g. show title, provider name)
-        for cross-platform filesystem safety. Distinct from _clean_filename
-        in that it also rejects '..'/'.' components to prevent a
-        crawler-supplied title from escaping cache_dir via directory
-        traversal.
-        """
         value = str(value).strip()
         for char in _INVALID_CHARS:
             value = value.replace(char, '_')
-        value = value.strip('. ')  # trailing dots/spaces are unsafe on Windows
+        value = value.strip('. ')
         if value in ('', '.', '..'):
             value = '_'
         if len(value) > _MAX_COMPONENT_LEN:
@@ -392,18 +348,14 @@ class LibraryManager:
 
     @staticmethod
     def _clean_filename(filename: str) -> str:
-        """Clean a filename for filesystem compatibility"""
-        # Remove invalid characters
         for char in _INVALID_CHARS:
             filename = filename.replace(char, '_')
-        # Limit length
         if len(filename) > _MAX_COMPONENT_LEN:
             name, ext = os.path.splitext(filename)
             filename = name[:_MAX_COMPONENT_LEN - len(ext)] + ext
         return filename
 
     def _clean_empty_dirs(self) -> None:
-        """Remove empty directories from the cache"""
         for root, dirs, files in os.walk(str(self.cache_dir), topdown=False):
             for dir_name in dirs:
                 dir_path = Path(root) / dir_name
@@ -416,12 +368,10 @@ class LibraryManager:
 
     @staticmethod
     def _trigger_library_scan() -> None:
-        """Tell Kodi to scan the library"""
         xbmc.executebuiltin("UpdateLibrary(video)")
 
     @staticmethod
     def _is_source_added() -> bool:
-        """Check if the cache directory is already in sources.xml"""
         import xml.etree.ElementTree as ET
 
         sources_path = xbmcvfs.translatePath('special://profile/sources.xml')
@@ -449,9 +399,7 @@ class LibraryManager:
         return False
 
     def add_source_to_library(self) -> Tuple[bool, str]:
-        """Automatically add the cache folder to Kodi's sources.xml"""
         import xml.etree.ElementTree as ET
-        from xml.dom import minidom
 
         if self._is_source_added():
             return True, "already_exists"
@@ -462,36 +410,37 @@ class LibraryManager:
             raw_path += '/'
 
         try:
-            # Parse existing sources.xml or create a new one
             try:
                 tree = ET.parse(sources_path)
                 root = tree.getroot()
-            except (IOError, FileNotFoundError):
+            except Exception:
+                xbmc.log(f"{LOG_PREFIX} sources.xml missing or corrupt, creating new.", xbmc.LOGWARNING)
                 root = ET.Element('sources')
                 tree = ET.ElementTree(root)
 
-            # Find or create <video> section
             video_node = root.find('video')
             if video_node is None:
                 video_node = ET.SubElement(root, 'video')
-                ET.SubElement(video_node, 'default', {'pathversion': '1'})
+                default_node = ET.SubElement(video_node, 'default')
+                default_node.set('pathversion', '1')
 
-            # Create new source node
             source_node = ET.SubElement(video_node, 'source')
             name_node = ET.SubElement(source_node, 'name')
             name_node.text = "Ultimate VOD"
+
             path_node = ET.SubElement(source_node, 'path')
             path_node.set('pathversion', '1')
             path_node.text = raw_path
+
             allowsharing_node = ET.SubElement(source_node, 'allowsharing')
             allowsharing_node.text = "true"
 
-            # Write back to file with pretty formatting
-            xml_str = ET.tostring(root, encoding='utf-8')
-            pretty_xml = minidom.parseString(xml_str).toprettyxml(indent="  ", encoding='utf-8')
-
-            with open(sources_path, 'wb') as f:
-                f.write(pretty_xml)
+            xml_bytes = ET.tostring(root, encoding='utf-8')
+            f = xbmcvfs.File(sources_path, 'wb')
+            try:
+                f.write(xml_bytes)
+            finally:
+                f.close()
 
             xbmc.log(f"{LOG_PREFIX} Source added to sources.xml successfully", xbmc.LOGINFO)
             return True, ""
@@ -500,7 +449,6 @@ class LibraryManager:
             return False, str(e)
 
     def clear_cache(self) -> None:
-        """Clear the entire library cache"""
         try:
             with FileLock(self.lock_path, timeout=30):
                 if self.cache_dir.exists():
@@ -512,5 +460,8 @@ class LibraryManager:
                         else:
                             entry.unlink()
                     xbmc.log(f"{LOG_PREFIX} Library cache cleared", xbmc.LOGINFO)
+
+                self.last_sync = None
+                set_setting('last_sync_time', '')
         except LockTimeoutError as e:
             xbmc.log(f"{LOG_PREFIX} {e}", xbmc.LOGWARNING)
