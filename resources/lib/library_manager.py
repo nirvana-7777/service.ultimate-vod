@@ -229,7 +229,7 @@ class LibraryManager:
                     raise ValueError(f"missing id/type: {item!r}")
 
                 index = movie_index if item_type == 'movie' else show_index
-                filepath = index.get(str(item_id))
+                filepath = index.get(self._clean_filename(str(item_id)))
 
                 if filepath and filepath.exists():
                     filepath.unlink()
